@@ -70,7 +70,7 @@ class Interact(Cmd):
                 print ("Wrong Flag")
                 self.cmdloop()
         else:
-            print ("Wrong Number of Arguments")
+            print ("Expected Input of filename, encflag <opt password>")
             self.cmdloop()
         self.clientsocket.sendall(str.encode("get"))
         self.clientsocket.sendall(str.encode(filename))
@@ -158,47 +158,72 @@ class Interact(Cmd):
 
 
 def connect(hostname, port):
-  ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-  ctx.verify_mode = ssl.CERT_REQUIRED
-  ctx.check_hostname = False
-  ctx.load_cert_chain('client_cert.pem', keyfile='client_key.pem')
-  ctx.load_verify_locations('server_cert.pem')
-  conn = ctx.wrap_socket(socket.socket(socket.AF_INET))
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    ctx.verify_mode = ssl.CERT_REQUIRED
+    ctx.check_hostname = False
+    try:
+        ctx.load_cert_chain('client_cert.pem', keyfile='client_key.pem')
+    except IOError as e:
+        my_error = str(e)+": client key or client certification not found"
+        error_handle(my_error)
+    try:
+        ctx.load_verify_locations('server_cert.pem')
+    except IOError as e:
+        my_error = str(e)+": server certification not found"
+        error_handle(my_error)
+    
+    #will this ever fail?   
+    conn = ctx.wrap_socket(socket.socket(socket.AF_INET))
+    try:
+        conn.connect((hostname, port))
+    except socket.error:
+        my_error="Connection Refused"
+        error_handle(my_error)
+    #pprint.pprint(conn. getpeercert())
+    return conn
+      #conn.close()
 
-  conn.connect((hostname, port))
-  #pprint.pprint(conn.getpeercert())
-  return conn
-  #conn.close()
+def error_handle(error_string):
+    """
+        Written by Sean
 
+        Args
+            error_string: string we print
+
+        This function will print the error of a try catch statement and then exit
+    """
+    print (error_string)
+    sys.exit(0)
 
 def check_arguments(serv_addr,port):
-  """
-  Sanity-checking server arguments.
-  """
-  try:
-      serv_addr = socket.inet_aton(serv_addr)
-  except:
-      print ("Invalid IP address")
-      return False
-  if (port <1024 or port >65536):
-      print ("Port Number out of range. Should be in <1024,65536>")
-      return False
-  else:
-      return True
+    """
+    Sanity-checking server arguments.
+    """
+    try:
+        serv_addr = socket.inet_aton(serv_addr)
+    except:
+        print ("Invalid IP address")
+        return False
+    if (port <1024 or port >65536):
+        print ("Port Number out of range. Should be in <1024,65536>")
+        return False
+    else:
+        return True
 
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser(description="I am the client")
-  parser.add_argument('serv_addr',type=str,help='The address at which the server is running')
-  parser.add_argument('serv_port', type=int,help='The port on which the server is running')
+    parser = argparse.ArgumentParser(description="I am the client")
+    parser.add_argument('serv_addr',type=str,help='The address at which the server is running')
+    parser.add_argument('serv_port', type=int,help='The port on which the server is running')
 
-  # Parse the commandline arguments.
-  args = parser.parse_args()
-  if check_arguments(args.serv_addr,args.serv_port):
-      socket = connect(args.serv_addr, args.serv_port)
-      try:
-            console = Interact(socket)
-            console.cmdloop()
-      finally:
-            socket.close()
-            sys.exit(0)
+    # Parse the commandline arguments.
+    args = parser.parse_args()
+    if check_arguments(args.serv_addr,args.serv_port):
+        socket = connect(args.serv_addr, args.serv_port)
+    try:
+        console = Interact(socket)
+        console.cmdloop()
+
+    finally:
+        socket.close()
+        sys.exit(0)
