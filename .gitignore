@@ -1,0 +1,8 @@
+## General/Vim
+.*.swp
+*~
+.*~
+
+## Python
+.py[co]
+.env
