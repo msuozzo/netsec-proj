@@ -6,3 +6,5 @@
 ## Python
 .py[co]
 .env
+
+__pycache__
