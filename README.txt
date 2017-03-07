@@ -7,6 +7,15 @@
         b) Server keeps it's files in the directory server_files and client
            in tmp_client. Don't change them as they are hardcoded too.
 
+*How to set up?
+
+To set up the environment in a GCE Ubuntu 16.04 VM:
+    1) Clone this repository (let's say REPO_PATH=~/netsec-proj)
+    2) sudo apt-get install -y python3-pip
+    3) cd ${REPO_PATH}
+    4) pip3 install -r requirements.txt
+
+
 *How to Run?
 
 Note: Run the server first else you will encounter a "Connections closed"
@@ -20,15 +29,15 @@ Method 1:-
         As is common, run the server first.
 
 Method 2:-
-        server: python server.py <port>
-        client: python client.py <host> <port>
+        server: ./server.py <port>
+        client: ./client.py <host> <port>
         where:-
         <port>          : Port Number on which server is running.
         <host>          : IP Address/FQDN of the server on which the Server is
                                 hosted/Client will connect
         Eg:
-        Server          : python server.py 5000
-        Client          : python client.py 127.0.0.1 5000
+        Server          : ./server.py 5000
+        Client          : ./client.py 127.0.0.1 5000
 
 
 *Supported Commands and Formats:
