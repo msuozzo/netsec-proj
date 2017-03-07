@@ -136,11 +136,13 @@ class Interact(Cmd):
         if len(args) == 2:
             #case put <filename> <encflag>
             filename, encflag = line.split(" ")
-            if not os.path.isfile(filename):
-                print("Error: %s cannot be transferred" %filename)
-                return
-            elif encflag!='N':
+            if encflag!='N':
                 print('Error: For 2-argument put, flag must be "N"\nUsage: "put <fname> N"')
+                return
+            try:
+                open(filename, 'rb').close()
+            except:
+                print("Error: %s cannot be transferred" %filename)
                 return
 
             self._put(filename)
