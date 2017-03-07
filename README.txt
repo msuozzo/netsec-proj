@@ -1,11 +1,12 @@
 "COMS 4180 Network Security Group Project"
 ==========================================
 
-* Warning:
-        a) All Certificates must be in the same folder. Names should not be
-           changed as they have been hardcoded.
-        b) Server keeps it's files in the directory server_files and client
-           in tmp_client. Don't change them as they are hardcoded too.
+* Note:
+        a) Certificate and private key paths must be provided the the client
+           and server but may be specified using either the absolute or
+           relative path.
+        b) NONE of the arguments to client commands (get, put) may contain
+           spaces. This breaks parsing. Other whitespace characters are fine.
 
 *How to set up?
 
