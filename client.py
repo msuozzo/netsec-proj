@@ -93,8 +93,8 @@ class Interact(Cmd):
 
         conn_handler.recv_data(self.clientsocket, filename)
         conn_handler.recv_data(self.clientsocket, hash_filename)
-        with open(hash_filename,'r'):
-            fhash = hash_filename.read()
+        with open(hash_filename,'r') as hash_file:
+            fhash = hash_file.read()
         if encrypt:
             # Client assumes the file was encrypted.
             os.rename(filename, encrypted_filename)
