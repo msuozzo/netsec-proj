@@ -11,6 +11,10 @@ import crypto_handler
 import conn_handler
 
 
+class Error(Exception):
+    """Base error for the class."""
+
+
 class Interact(Cmd):
     """CLI for interacting with the user!!
     """
@@ -160,37 +164,31 @@ def connect(hostname, port):
     ctx.check_hostname = False
     try:
         ctx.load_cert_chain('client_cert.pem', keyfile='client_key.pem')
-    except IOError as e:
-        my_error = str(e)+": client key or client certification not found"
-        error_handle(my_error)
+    except Exception as e:
+        raise Error('Failed to load client key or client certification: ' +
+                str(e))
     try:
         ctx.load_verify_locations('server_cert.pem')
-    except IOError as e:
-        my_error = str(e)+": server certification not found"
-        error_handle(my_error)
+    except Exception as e:
+        raise Error('Failed to load server cert: ' + str(e))
     
-    #will this ever fail?   
     conn = ctx.wrap_socket(socket.socket(socket.AF_INET))
     try:
         conn.connect((hostname, port))
-    except socket.error:
-        my_error="Connection Refused"
-        error_handle(my_error)
-    #pprint.pprint(conn. getpeercert())
-    return conn
-
-def error_handle(error_string):
-    """Print the error string and then exit."""
-    print(error_string)
-    sys.exit(0)
+    except Exception as e:
+        raise Error('Failed to connect: ' + str(e))
+    else:
+        return conn
 
 def _valid_addr(addr):
     if addr == 'localhost':
         return addr
     try:
-        return socket.inet_aton(addr)
+        socket.inet_aton(addr)
     except OSError as e:
-        raise argparse.ArgumentTypeError(str(e))
+        raise argparse.ArgumentTypeError('Invalid IP address')
+    else:
+        return addr
 
 def _valid_port(port):
     try:
@@ -210,7 +208,12 @@ if __name__ == '__main__':
 
     # Parse the commandline arguments.
     args = parser.parse_args()
-    sock = connect(args.serv_addr, args.serv_port)
+    try:
+        sock = connect(args.serv_addr, args.serv_port)
+    except Error as e:
+        print(e)
+        sys.exit(1)
+
     try:
         console = Interact(sock)
         console.cmdloop()
