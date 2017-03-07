@@ -18,7 +18,7 @@ def listen(port):
     conn = ctx.wrap_socket(socket.socket(socket.AF_INET),
                            server_side=True)
 
-    conn.bind(('localhost', port))
+    conn.bind(('', port))
     conn.listen()
     return conn
 
