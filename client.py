@@ -10,26 +10,23 @@ from cmd import Cmd
 import crypto_handler
 import conn_handler
 
-class Interact(Cmd):
 
+class Interact(Cmd):
     """CLI for interacting with the user!!
     """
 
-    def __init__(self,clientsocket):
-        cmd.Cmd.__init__(self)
-        self.prompt     = ">"
+    def __init__(self, clientsocket):
+        super(Interact, self).__init__(self)
+        self.prompt = ">"
         self.doc_header = "Secure TLS Shell"
-        self.ruler      = "-"
-        self.intro      = 'Welcome to our 2-Way secure TLS shell!!'
+        self.ruler = "-"
+        self.intro = 'Welcome to our 2-Way secure TLS shell!!'
         self.clientsocket = clientsocket
-        signal.signal(signal.SIGINT, self.handler)# Signal Interrupt Handler.
 
-    def handler(self, signum, frame):
-        """For handling ctrl-c events
-        """
-        print ("Recieved Signal !! Cleaning Up Please Wait")
-        self.clientsocket.close()
-        exit()
+        def sigint_handler(signum, frame):
+            print('Shutting down...')
+            sys.exit(0)
+        signal.signal(signal.SIGINT, sigint_handler)  # Signal Interrupt Handler.
 
     def cmdloop(self):
         try:
@@ -181,49 +178,42 @@ def connect(hostname, port):
         error_handle(my_error)
     #pprint.pprint(conn. getpeercert())
     return conn
-      #conn.close()
 
 def error_handle(error_string):
-    """
-        Written by Sean
-
-        Args
-            error_string: string we print
-
-        This function will print the error of a try catch statement and then exit
-    """
-    print (error_string)
+    """Print the error string and then exit."""
+    print(error_string)
     sys.exit(0)
 
-def check_arguments(serv_addr,port):
-    """
-    Sanity-checking server arguments.
-    """
+def _valid_addr(addr):
+    if addr == 'localhost':
+        return addr
     try:
-        serv_addr = socket.inet_aton(serv_addr)
-    except:
-        print ("Invalid IP address")
-        return False
-    if (port <1024 or port >65536):
-        print ("Port Number out of range. Should be in <1024,65536>")
-        return False
+        return socket.inet_aton(addr)
+    except OSError as e:
+        raise argparse.ArgumentTypeError(str(e))
+
+def _valid_port(port):
+    try:
+        port = int(port)
+    except ValueError:
+        raise argparse.ArgumentTypeError('Port must be numberic')
     else:
-        return True
+        if (port < 1024 or port > 65536):
+            raise argparse.ArgumentTypeError('Port Number out of range. Should be in the range [1024,65536]')
+        return port
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="I am the client")
-    parser.add_argument('serv_addr',type=str,help='The address at which the server is running')
-    parser.add_argument('serv_port', type=int,help='The port on which the server is running')
+    parser.add_argument('serv_addr', type=_valid_addr, help='The address at which the server is running')
+    parser.add_argument('serv_port', type=_valid_port, help='The port on which the server is running')
 
     # Parse the commandline arguments.
     args = parser.parse_args()
-    if check_arguments(args.serv_addr,args.serv_port):
-        socket = connect(args.serv_addr, args.serv_port)
+    sock = connect(args.serv_addr, args.serv_port)
     try:
-        console = Interact(socket)
+        console = Interact(sock)
         console.cmdloop()
-
     finally:
-        socket.close()
+        sock.close()
         sys.exit(0)
