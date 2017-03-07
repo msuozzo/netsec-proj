@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 import argparse
 import pprint
 import socket
@@ -48,7 +47,7 @@ def client_handler(connstream):
             else:
                 connstream.sendall(str.encode("OK"))
                 conn_handler.send_data(connstream, filename)
-                conn_handler.send_data(connstream, hash_filename)
+                connstream.sendall(str.encode(open(hash_filename).read(), 'utf-8'))
         if not mode:
             break
 

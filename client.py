@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import argparse
 import pprint
 import socket
@@ -8,8 +9,12 @@ import readline
 import signal
 import sys
 from cmd import Cmd
+
 import crypto_handler
 import conn_handler
+
+_TMP_FNAME = '.~~tmp_file'
+_TMP_ENC_FNAME = _TMP_FNAME + '.encrypted'
 
 
 class Error(Exception):
@@ -22,7 +27,7 @@ class Interact(Cmd):
 
     def __init__(self, clientsocket):
         super(Interact, self).__init__()
-        self.prompt = ">"
+        self.prompt = "> "
         self.doc_header = "Secure TLS Shell"
         self.ruler = "-"
         self.intro = 'Welcome to our 2-Way secure TLS shell!!'
@@ -89,42 +94,37 @@ class Interact(Cmd):
             print(status)
             return
 
-        hash_filename = filename + '.sha256'
-        encrypted_filename = filename + '.encrypted'
-
-        conn_handler.recv_data(self.clientsocket, filename)
-        conn_handler.recv_data(self.clientsocket, hash_filename)
-        with open(hash_filename,'r') as hash_file:
-            fhash = hash_file.read()
+        conn_handler.recv_data(self.clientsocket, _TMP_FNAME)
+        server_hash = str(self.clientsocket.recv(1024), 'utf-8')
         if encrypt:
             # Client assumes the file was encrypted.
-            os.rename(filename, encrypted_filename)
-            if not crypto_handler.decrypt_file(
-                    password, encrypted_filename, output_filename=filename):
-                #File was not encrypted to begin with!!
-                print("Error: decryption of %s failed, was the file encrypted?" % filename)
-                os.remove(filename)
+            os.rename(_TMP_FNAME, _TMP_ENC_FNAME)
+            if not crypto_handler.decrypt_file(password, _TMP_ENC_FNAME, output_filename=_TMP_FNAME):
+                print("Error: decryption of %s failed. (Was the file encrypted?)" % filename)
             else:
                 # Verify the decrypted file's hash
-                filehash = crypto_handler.hash_(filename)
-                if fhash == filehash:
-                    print("Retrieval of %s complete" %filename)
+                calculated_hash = crypto_handler.hash_(_TMP_FNAME)
+                if server_hash == calculated_hash:
+                    os.rename(_TMP_FNAME, filename)
+                    print("Retrieval of %s complete" % filename)
                 else:
                     print("Error: Computed hash of %s does not match "
                             "retrieved hash" % filename)
-                    os.remove(filename)
-            # In all cases, delete the hash and encrypted files.
-            os.remove(hash_filename)
-            os.remove(encrypted_filename)
         else:
-            #Client assumes no encryption was applied
-            filehash = crypto_handler.hash_(filename)
-            if fhash == filehash:
+            # Client assumes no encryption was applied.
+            calculated_hash = crypto_handler.hash_(_TMP_FNAME)
+            if server_hash == calculated_hash:
+                os.rename(_TMP_FNAME, filename)
                 print("Retrieval of %s complete " % filename)
             else:
                 print("Error: Computed hash of %s does not match "
                         "retrieved hash" % filename)
-            os.remove(hash_filename)
+
+        # Unconditionally attempt to delete the temporary files.
+        try: os.remove(_TMP_FNAME)
+        except: pass
+        try: os.remove(_TMP_ENC_FNAME)
+        except: pass
 
     def do_put(self,line):
         """Puts the file into the server
@@ -170,8 +170,11 @@ class Interact(Cmd):
         self.clientsocket.sendall(str.encode(fhash))
         self.clientsocket.sendall(str.encode(filename))
         if encrypt:
-            crypto_handler.encrypt_file(password, filename)
-            conn_handler.send_data(self.clientsocket, filename + '.encrypted')
+            crypto_handler.encrypt_file(password, filename,
+                    output_filename=_TMP_ENC_FNAME)
+            conn_handler.send_data(self.clientsocket, _TMP_ENC_FNAME)
+            try: os.remove(_TMP_ENC_FNAME)
+            except: pass
         else:
             conn_handler.send_data(self.clientsocket, filename)
         msg = str(self.clientsocket.recv(1024), 'utf-8')
