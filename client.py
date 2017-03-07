@@ -4,6 +4,7 @@ import socket
 import ssl
 import cmd
 import os
+import readline
 import signal
 import sys
 from cmd import Cmd
@@ -34,13 +35,14 @@ class Interact(Cmd):
 
     def cmdloop(self):
         try:
-            Cmd.cmdloop(self)
+            super(Interact, self).cmdloop()
         except Exception as e:
-            print("Wrong Syntax use help <command> to find correct usage.",e)
+            print('Error encountered: ' + str(e))
+            self.intro = ''  # Suppress intro message for re-launch.
             self.cmdloop()
 
     def default(self, line):
-        print("Error: Invalid commands, valid commands are 'get' 'put' 'stop'")
+        print("Invalid command. Valid commands: ('get' 'put' 'stop'). Type 'help <cmd>' for command-specific help")
 
     def do_stop(self,line):
         """ Exits the shell"""
@@ -60,19 +62,19 @@ class Interact(Cmd):
             filename, encflag = line.split(" ")
             if encflag!='N':
                 print("Error: Wrong Flag")
-                self.cmdloop()
+                return
         elif len(args)==3:
             #case get <filename> <encflag = E> <password>
             filename, encflag, password = line.split(" ")
             if len(password)!=8:
                 print("Password is short <8 Characters>")
-                self.cmdloop()
+                return
             if encflag!='E':
                 print("Wrong Flag")
-                self.cmdloop()
+                return
         else:
             print("Expected Input of filename, encflag <opt password>")
-            self.cmdloop()
+            return
         self.clientsocket.sendall(str.encode("get"))
         self.clientsocket.sendall(str.encode(filename))
         status = str(self.clientsocket.recv(1024),'utf-8')
@@ -129,22 +131,22 @@ class Interact(Cmd):
             filename, encflag = line.split(" ")
             if not os.path.isfile(filename):
                 print("Error: %s cannot be transferred" %filename)
-                self.cmdloop()
+                return
             if encflag!='N':
                 print("Wrong parameter")
-                self.cmdloop()
+                return
         elif len(args)==3:
             #case put <filename> <encflag> <password>
             filename ,encflag, password = line.split(" ")
             if not os.path.isfile(filename):
                 print("Error: File not found. Should be in same folder!")
-                self.cmdloop()
+                return
             if encflag!="E" or len(password)!=8:
                 print("Error: Wrong Flag/password")
-                self.cmdloop()
+                return
         else:
             print("Error: Wrong Number of Arguments!!")
-            self.cmdloop()
+            return
         fhash = crypto_handler.hash_(filename)
         self.clientsocket.sendall(str.encode("put"))
         self.clientsocket.sendall(str.encode(fhash))
