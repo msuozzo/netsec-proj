@@ -20,7 +20,7 @@ class Interact(Cmd):
     """
 
     def __init__(self, clientsocket):
-        super(Interact, self).__init__(self)
+        super(Interact, self).__init__()
         self.prompt = ">"
         self.doc_header = "Secure TLS Shell"
         self.ruler = "-"
