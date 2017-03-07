@@ -183,17 +183,17 @@ class Interact(Cmd):
         print(msg)
 
 
-def connect(hostname, port):
+def connect(hostname, port, client_cert, client_key, server_cert):
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     ctx.verify_mode = ssl.CERT_REQUIRED
     ctx.check_hostname = False
     try:
-        ctx.load_cert_chain('client_cert.pem', keyfile='client_key.pem')
+        ctx.load_cert_chain(client_cert, keyfile=client_key)
     except Exception as e:
         raise Error('Failed to load client key or client certification: ' +
                 str(e))
     try:
-        ctx.load_verify_locations('server_cert.pem')
+        ctx.load_verify_locations(server_cert)
     except Exception as e:
         raise Error('Failed to load server cert: ' + str(e))
     
@@ -219,7 +219,7 @@ def _valid_port(port):
     try:
         port = int(port)
     except ValueError:
-        raise argparse.ArgumentTypeError('Port must be numberic')
+        raise argparse.ArgumentTypeError('Port must be numeric')
     else:
         if (port < 1024 or port > 65536):
             raise argparse.ArgumentTypeError('Port Number out of range. Should be in the range [1024,65536]')
@@ -230,11 +230,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="I am the client")
     parser.add_argument('serv_addr', type=_valid_addr, help='The address at which the server is running')
     parser.add_argument('serv_port', type=_valid_port, help='The port on which the server is running')
+    parser.add_argument('cert', type=str, help='The path of the client cert (.pem)')
+    parser.add_argument('key', type=str, help='The path of the client private key used to sign its cert (.pem)')
+    parser.add_argument('serv_cert', type=str, help='The path of the server cert (.pem)')
 
     # Parse the commandline arguments.
     args = parser.parse_args()
     try:
-        sock = connect(args.serv_addr, args.serv_port)
+        sock = connect(args.serv_addr, args.serv_port, args.cert, args.key, args.serv_cert)
     except Error as e:
         print(e)
         sys.exit(1)

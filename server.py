@@ -9,11 +9,11 @@ import os
 import signal
 import sys
 
-def listen(port):
+def listen(port, server_cert, server_key, client_cert):
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     ctx.verify_mode = ssl.CERT_REQUIRED
-    ctx.load_cert_chain('server_cert.pem', keyfile='server_key.pem')
-    ctx.load_verify_locations('client_cert.pem')
+    ctx.load_cert_chain(server_cert, keyfile=server_key)
+    ctx.load_verify_locations(client_cert)
     conn = ctx.wrap_socket(socket.socket(socket.AF_INET),
                            server_side=True)
 
@@ -63,13 +63,15 @@ def _valid_port(port):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='I am the server')
-    parser.add_argument('port', type=_valid_port,
-                        help='The port on which the server should run')
+    parser.add_argument('port', type=_valid_port, help='The port on which the server should run')
+    parser.add_argument('cert', type=str, help='The path of the server cert (.pem)')
+    parser.add_argument('key', type=str, help='The path of the server private key used to sign its cert (.pem)')
+    parser.add_argument('clnt_cert', type=str, help='The path of the client cert (.pem)')
 
     # Parse the commandline arguments.
     args = parser.parse_args()
     try:
-        sock = listen(args.port)
+        sock = listen(args.port, args.cert, args.key, args.clnt_cert)
     except Exception as e:
         print('Failed to bind to the port: ' + str(e))
         sys.exit(1)
