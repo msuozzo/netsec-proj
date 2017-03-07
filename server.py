@@ -38,12 +38,17 @@ def client_handler(connstream):
 
         if mode == 'get':
             filename = str(connstream.recv(1024),'utf-8')
-            if os.path.exists('server_files/' + filename):
+            try:
+                # Check that both the requested file and its hash file exist
+                # and are readable by the client.
+                open('server_files/' + filename, 'rb').close()
+                open('server_files/' + filename + '.sha256', 'rb').close()
+            except:
+                connstream.sendall(str.encode("Error: "+filename+" was not retrieved"))
+            else:
                 connstream.sendall(str.encode("OK"))
                 conn_handler.send_data(connstream,'server_files/'+filename)
                 conn_handler.send_data(connstream,'server_files/'+filename+'.sha256')
-            else:
-                connstream.sendall(str.encode("Error: "+filename+" was not retrieved"))
         if not mode:
             break
 
