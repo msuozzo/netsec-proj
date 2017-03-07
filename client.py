@@ -32,15 +32,15 @@ class Interact(Cmd):
         try:
             Cmd.cmdloop(self)
         except Exception as e:
-            print ("Wrong Syntax use help <command> to find correct usage.",e)
+            print("Wrong Syntax use help <command> to find correct usage.",e)
             self.cmdloop()
 
     def default(self, line):
-        print ("Error: Invalid commands, valid commands are 'get' 'put' 'stop'")
+        print("Error: Invalid commands, valid commands are 'get' 'put' 'stop'")
 
     def do_stop(self,line):
         """ Exits the shell"""
-        print ("Closing Socket!! Please wait")
+        print("Closing Socket!! Please wait")
         return True
 
     def do_get(self,line):
@@ -55,19 +55,19 @@ class Interact(Cmd):
             #case get <filename> <encflag = N>
             filename, encflag = line.split(" ")
             if encflag!='N':
-                print ("Error: Wrong Flag")
+                print("Error: Wrong Flag")
                 self.cmdloop()
         elif len(args)==3:
             #case get <filename> <encflag = E> <password>
             filename, encflag, password = line.split(" ")
             if len(password)!=8:
-                print ("Password is short <8 Characters>")
+                print("Password is short <8 Characters>")
                 self.cmdloop()
             if encflag!='E':
-                print ("Wrong Flag")
+                print("Wrong Flag")
                 self.cmdloop()
         else:
-            print ("Expected Input of filename, encflag <opt password>")
+            print("Expected Input of filename, encflag <opt password>")
             self.cmdloop()
         self.clientsocket.sendall(str.encode("get"))
         self.clientsocket.sendall(str.encode(filename))
@@ -82,7 +82,7 @@ class Interact(Cmd):
                 os.rename('tmp_client/'+filename,'tmp_client/'+filename+".encrypted")
                 if not crypto_handler.decrypt_file(password, 'tmp_client/'+filename+".encrypted"):
                     #File was not encrypted to begin with!!
-                    print ("Error: decryption of %s failed, was the file encrypted?"
+                    print("Error: decryption of %s failed, was the file encrypted?"
                             %filename)
                     os.remove('tmp_client/'+filename+".sha256") # sha of file
                     os.remove('tmp_client/'+filename+".encrypted") #enc file
@@ -91,9 +91,9 @@ class Interact(Cmd):
                     #File decrypted check hash
                     filehash = crypto_handler.hash_('tmp_client/'+filename)
                     if fhash==filehash:
-                        print ("retrieval of %s complete" %filename)
+                        print("retrieval of %s complete" %filename)
                     else:
-                        print ("Error: Computed hash of %s does not match "
+                        print("Error: Computed hash of %s does not match "
                         "retrieved hash" %filename)
                         os.remove('tmp_client/'+filename)
                     #Irrespecive of Match or not delete the hashed file.
@@ -103,14 +103,14 @@ class Interact(Cmd):
                 #Client assumes no encryption was applied
                 filehash = crypto_handler.hash_('tmp_client/'+filename)
                 if fhash==filehash:
-                    print ("retrieval of %s complete "%filename)
+                    print("retrieval of %s complete "%filename)
                 else:
-                    print ("Error: Computed hash of %s does not match "
+                    print("Error: Computed hash of %s does not match "
                         "retrieved hash" %filename)
                 os.remove('tmp_client/'+filename+".sha256")
         else:
             #Server Error Occured.
-            print (status)
+            print(status)
 
     def do_put(self,line):
         """Puts the file into the server
@@ -124,22 +124,22 @@ class Interact(Cmd):
             #case put <filename> <encflag>
             filename, encflag = line.split(" ")
             if not os.path.isfile(filename):
-                print ("Error: %s cannot be transferred" %filename)
+                print("Error: %s cannot be transferred" %filename)
                 self.cmdloop()
             if encflag!='N':
-                print ("Wrong parameter")
+                print("Wrong parameter")
                 self.cmdloop()
         elif len(args)==3:
             #case put <filename> <encflag> <password>
             filename ,encflag, password = line.split(" ")
             if not os.path.isfile(filename):
-                print ("Error: File not found. Should be in same folder!")
+                print("Error: File not found. Should be in same folder!")
                 self.cmdloop()
             if encflag!="E" or len(password)!=8:
-                print ("Error: Wrong Flag/password")
+                print("Error: Wrong Flag/password")
                 self.cmdloop()
         else:
-            print ("Error: Wrong Number of Arguments!!")
+            print("Error: Wrong Number of Arguments!!")
             self.cmdloop()
         fhash = crypto_handler.hash_(filename)
         self.clientsocket.sendall(str.encode("put"))
@@ -151,7 +151,7 @@ class Interact(Cmd):
             crypto_handler.encrypt_file(password,filename)
             conn_handler.send_data(self.clientsocket,filename+'.encrypted')
         msg = str(self.clientsocket.recv(1024),'utf-8')
-        print (msg)
+        print(msg)
 
 
 def connect(hostname, port):

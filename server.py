@@ -55,7 +55,7 @@ def check_arguments(port):
   """
 
     if port < 1024 or port > 65536:
-        print ('Port Number out of range. Should be in <1024,65536>')
+        print('Port Number out of range. Should be in <1024,65536>')
         return False
     else:
         return True
@@ -73,9 +73,9 @@ if __name__ == '__main__':
         if check_arguments(args.port):
                 client_socket = connect(args.port)
                 while True:
-                    #print ("Runnng Server")
+                    #print("Runnng Server")
                     client_handler(client_socket)
                 client_socket.close()
     except KeyboardInterrupt:
-        print ('\nInterrupt received!! closing connection')
+        print('\nInterrupt received!! closing connection')
         exit()
