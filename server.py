@@ -28,27 +28,27 @@ def client_handler(connstream):
         mode = str(connstream.recv(1024),'utf-8')
         if mode == 'put':
             fhash = connstream.recv(1024)
-            fname = str(connstream.recv(1024),'utf-8')
-            with open('server_files/' + fname + '.sha256', 'wb') as f:
-                f.write(fhash)
-            conn_handler.recv_data(connstream,'server_files/' + fname)
-            msg = "Transfer of "+fname+" complete"
-            connstream.sendall(str.encode(msg))
-
-
-        if mode == 'get':
             filename = str(connstream.recv(1024),'utf-8')
+            hash_filename = filename + '.sha256'
+            with open(hash_filename, 'wb') as f:
+                f.write(fhash)
+            conn_handler.recv_data(connstream, filename)
+            msg = "Transfer of %s complete" % filename
+            connstream.sendall(str.encode(msg))
+        elif mode == 'get':
+            filename = str(connstream.recv(1024), 'utf-8')
+            hash_filename = filename + '.sha256'
             try:
                 # Check that both the requested file and its hash file exist
                 # and are readable by the client.
-                open('server_files/' + filename, 'rb').close()
-                open('server_files/' + filename + '.sha256', 'rb').close()
+                open(filename, 'rb').close()
+                open(hash_filename, 'rb').close()
             except:
-                connstream.sendall(str.encode("Error: "+filename+" was not retrieved"))
+                connstream.sendall(str.encode("Error: %s was not retrieved" % filename))
             else:
                 connstream.sendall(str.encode("OK"))
-                conn_handler.send_data(connstream,'server_files/'+filename)
-                conn_handler.send_data(connstream,'server_files/'+filename+'.sha256')
+                conn_handler.send_data(connstream, filename)
+                conn_handler.send_data(connstream, hash_filename)
         if not mode:
             break
 
