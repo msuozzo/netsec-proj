@@ -29,15 +29,20 @@ Method 1:-
         As is common, run the server first.
 
 Method 2:-
-        server: ./server.py <port>
-        client: ./client.py <host> <port>
+        server: ./server.py <port> <cert> <key> <client_cert>
+        client: ./client.py <host> <port> <cert> <key> <server_cert>
         where:-
         <port>          : Port Number on which server is running.
         <host>          : IP Address/FQDN of the server on which the Server is
-                                hosted/Client will connect
+                              hosted/Client will connect
+        <cert>          : The .pem file containing that entity's certificate.
+        <key>           : The .pem file containing the private key that signs
+                              that entity's certificate.
+        <*_cert>        : The .pem file containing the other entity's
+                              certificate.
         Eg:
-        Server          : ./server.py 5000
-        Client          : ./client.py 127.0.0.1 5000
+        Server          : ./server.py 5000 server_cert.pem server_key.pem client_cert.pem
+        Client          : ./client.py 127.0.0.1 5000 client_cert.pem client_key.pem server_cert.pem
 
 
 *Supported Commands and Formats:
