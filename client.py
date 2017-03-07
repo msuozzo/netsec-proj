@@ -29,7 +29,7 @@ class Interact(Cmd):
         self.clientsocket = clientsocket
 
         def sigint_handler(signum, frame):
-            print('Shutting down...')
+            print('\nShutting down...')
             sys.exit(0)
         signal.signal(signal.SIGINT, sigint_handler)  # Signal Interrupt Handler.
 
@@ -46,7 +46,7 @@ class Interact(Cmd):
 
     def do_stop(self,line):
         """ Exits the shell"""
-        print("Closing Socket!! Please wait")
+        print("Shutting down...")
         return True
 
     def do_get(self,line):
@@ -57,66 +57,70 @@ class Interact(Cmd):
                 <opt password>  : Password<8 Characters> for decrypting the file.
         """
         args = line.split(" ")
-        if len(args)==2:
+        if len(args) == 2:
             #case get <filename> <encflag = N>
             filename, encflag = line.split(" ")
             if encflag!='N':
-                print("Error: Wrong Flag")
+                print('Error: For 2-argument get, flag must be "N"\nUsage: "get <fname> N"')
                 return
-        elif len(args)==3:
+            self._get(filename)
+        elif len(args) == 3:
             #case get <filename> <encflag = E> <password>
             filename, encflag, password = line.split(" ")
-            if len(password)!=8:
-                print("Password is short <8 Characters>")
+            if len(password) != 8:
+                print('Error: Password must be 8 characters (no spaces)')
                 return
-            if encflag!='E':
-                print("Wrong Flag")
+            elif encflag != 'E':
+                print('Error: For 3-argument get, flag must be "E"\nUsage: "get <fname> E <pword>"')
                 return
+            self._get(filename, encrypt=True, password=password)
         else:
-            print("Expected Input of filename, encflag <opt password>")
+            print('Usage: "get <fname> <flag> {opt_pword}"')
             return
+
+    def _get(self, filename, encrypt=False, password=None)
         self.clientsocket.sendall(str.encode("get"))
         self.clientsocket.sendall(str.encode(filename))
         status = str(self.clientsocket.recv(1024),'utf-8')
-        if status=="OK":
-            conn_handler.recv_data(self.clientsocket,'tmp_client/'+filename)
-            conn_handler.recv_data(self.clientsocket,'tmp_client/'+filename+".sha256")
-            hash_file = open('tmp_client/'+filename+".sha256",'r')
-            fhash = hash_file.read()
-            if encflag=='E':
-                #Client assumes the file was encrypted.
-                os.rename('tmp_client/'+filename,'tmp_client/'+filename+".encrypted")
-                if not crypto_handler.decrypt_file(password, 'tmp_client/'+filename+".encrypted"):
-                    #File was not encrypted to begin with!!
-                    print("Error: decryption of %s failed, was the file encrypted?"
-                            %filename)
-                    os.remove('tmp_client/'+filename+".sha256") # sha of file
-                    os.remove('tmp_client/'+filename+".encrypted") #enc file
-                    os.remove('tmp_client/'+filename)
-                else:
-                    #File decrypted check hash
-                    filehash = crypto_handler.hash_('tmp_client/'+filename)
-                    if fhash==filehash:
-                        print("retrieval of %s complete" %filename)
-                    else:
-                        print("Error: Computed hash of %s does not match "
-                        "retrieved hash" %filename)
-                        os.remove('tmp_client/'+filename)
-                    #Irrespecive of Match or not delete the hashed file.
-                    os.remove('tmp_client/'+filename+".sha256")
-                    os.remove('tmp_client/'+filename+".encrypted")
-            else:
-                #Client assumes no encryption was applied
-                filehash = crypto_handler.hash_('tmp_client/'+filename)
-                if fhash==filehash:
-                    print("retrieval of %s complete "%filename)
-                else:
-                    print("Error: Computed hash of %s does not match "
-                        "retrieved hash" %filename)
-                os.remove('tmp_client/'+filename+".sha256")
-        else:
+        if status != 'OK':
             #Server Error Occured.
             print(status)
+            return
+        conn_handler.recv_data(self.clientsocket,'tmp_client/'+filename)
+        conn_handler.recv_data(self.clientsocket,'tmp_client/'+filename+".sha256")
+        with open('tmp_client/'+filename+".sha256",'r'):
+            fhash = hash_file.read()
+        if encrypt:
+            #Client assumes the file was encrypted.
+            os.rename('tmp_client/'+filename,'tmp_client/'+filename+".encrypted")
+            if not crypto_handler.decrypt_file(password, 'tmp_client/'+filename+".encrypted"):
+                #File was not encrypted to begin with!!
+                print("Error: decryption of %s failed, was the file encrypted?"
+                        %filename)
+                os.remove('tmp_client/'+filename+".sha256") # sha of file
+                os.remove('tmp_client/'+filename+".encrypted") #enc file
+                os.remove('tmp_client/'+filename)
+            else:
+                #File decrypted check hash
+                filehash = crypto_handler.hash_('tmp_client/'+filename)
+                if fhash==filehash:
+                    print("retrieval of %s complete" %filename)
+                else:
+                    print("Error: Computed hash of %s does not match "
+                    "retrieved hash" %filename)
+                    os.remove('tmp_client/'+filename)
+                #Irrespecive of Match or not delete the hashed file.
+                os.remove('tmp_client/'+filename+".sha256")
+                os.remove('tmp_client/'+filename+".encrypted")
+        else:
+            #Client assumes no encryption was applied
+            filehash = crypto_handler.hash_('tmp_client/'+filename)
+            if fhash==filehash:
+                print("retrieval of %s complete "%filename)
+            else:
+                print("Error: Computed hash of %s does not match "
+                    "retrieved hash" %filename)
+            os.remove('tmp_client/'+filename+".sha256")
 
     def do_put(self,line):
         """Puts the file into the server
@@ -125,38 +129,46 @@ class Interact(Cmd):
             opt<password>   : Password<8 Characters> for encrypting the file.
         """
         args = line.split(" ")
-        filename = args[0].strip()
-        if len(args)==2:
+        if len(args) == 2:
             #case put <filename> <encflag>
             filename, encflag = line.split(" ")
             if not os.path.isfile(filename):
                 print("Error: %s cannot be transferred" %filename)
                 return
-            if encflag!='N':
-                print("Wrong parameter")
+            elif encflag!='N':
+                print('Error: For 2-argument put, flag must be "N"\nUsage: "put <fname> N"')
                 return
-        elif len(args)==3:
+
+            self._put(filename)
+        elif len(args) == 3:
             #case put <filename> <encflag> <password>
-            filename ,encflag, password = line.split(" ")
+            filename, encflag, password = line.split(" ")
             if not os.path.isfile(filename):
-                print("Error: File not found. Should be in same folder!")
+                print("Error: File not found.")
                 return
-            if encflag!="E" or len(password)!=8:
-                print("Error: Wrong Flag/password")
+            elif encflag != 'E':
+                print('Error: For 3-argument put, flag must be "E"\nUsage: "put <fname> E <pword>"')
                 return
+            elif len(password) != 8:
+                print('Error: Password must be 8 characters (no spaces)')
+                return
+
+            self._put(filename, encrypt=True, password=password)
         else:
-            print("Error: Wrong Number of Arguments!!")
+            print('Usage: "put <fname> <flag> {opt_pword}"')
             return
+
+    def _put(self, filename, encrypt=False, password=None)
         fhash = crypto_handler.hash_(filename)
         self.clientsocket.sendall(str.encode("put"))
         self.clientsocket.sendall(str.encode(fhash))
         self.clientsocket.sendall(str.encode(filename))
-        if encflag=="N":
-            conn_handler.send_data(self.clientsocket,filename)
+        if encrypt:
+            crypto_handler.encrypt_file(password, filename)
+            conn_handler.send_data(self.clientsocket, filename + '.encrypted')
         else:
-            crypto_handler.encrypt_file(password,filename)
-            conn_handler.send_data(self.clientsocket,filename+'.encrypted')
-        msg = str(self.clientsocket.recv(1024),'utf-8')
+            conn_handler.send_data(self.clientsocket, filename)
+        msg = str(self.clientsocket.recv(1024), 'utf-8')
         print(msg)
 
 
