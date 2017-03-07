@@ -76,11 +76,11 @@ if __name__ == '__main__':
         sys.exit(1)
 
     try:
-        (client_socket, addr) = sock.accept()
-        try:
-            while True:
+        while True:
+            (client_socket, addr) = sock.accept()
+            try:
                 client_handler(client_socket)
-        finally:
-            client_socket.close()
+            finally:
+                client_socket.close()
     finally:
         sock.close()

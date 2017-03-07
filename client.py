@@ -47,6 +47,7 @@ class Interact(Cmd):
     def do_stop(self,line):
         """ Exits the shell"""
         print("Shutting down...")
+        self.clientsocket.sendall(str.encode(""))
         return True
 
     def do_get(self,line):
@@ -78,7 +79,7 @@ class Interact(Cmd):
             print('Usage: "get <fname> <flag> {opt_pword}"')
             return
 
-    def _get(self, filename, encrypt=False, password=None)
+    def _get(self, filename, encrypt=False, password=None):
         self.clientsocket.sendall(str.encode("get"))
         self.clientsocket.sendall(str.encode(filename))
         status = str(self.clientsocket.recv(1024),'utf-8')
@@ -160,7 +161,7 @@ class Interact(Cmd):
             print('Usage: "put <fname> <flag> {opt_pword}"')
             return
 
-    def _put(self, filename, encrypt=False, password=None)
+    def _put(self, filename, encrypt=False, password=None):
         fhash = crypto_handler.hash_(filename)
         self.clientsocket.sendall(str.encode("put"))
         self.clientsocket.sendall(str.encode(fhash))
