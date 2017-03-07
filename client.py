@@ -149,14 +149,16 @@ class Interact(Cmd):
         elif len(args) == 3:
             #case put <filename> <encflag> <password>
             filename, encflag, password = line.split(" ")
-            if not os.path.isfile(filename):
-                print("Error: File not found.")
-                return
-            elif encflag != 'E':
+            if encflag != 'E':
                 print('Error: For 3-argument put, flag must be "E"\nUsage: "put <fname> E <pword>"')
                 return
             elif len(password) != 8:
                 print('Error: Password must be 8 characters (no spaces)')
+                return
+            try:
+                open(filename, 'rb').close()
+            except:
+                print("Error: %s cannot be transferred" %filename)
                 return
 
             self._put(filename, encrypt=True, password=password)
