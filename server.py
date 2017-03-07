@@ -8,8 +8,9 @@ import crypto_handler
 import conn_handler
 import os
 import signal
+import sys
 
-def connect(port):
+def listen(port):
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     ctx.verify_mode = ssl.CERT_REQUIRED
     ctx.load_cert_chain('server_cert.pem', keyfile='server_key.pem')
@@ -19,9 +20,7 @@ def connect(port):
 
     conn.bind(('localhost', port))
     conn.listen()
-    (new_conn, addr) = conn.accept()
-    #pprint.pprint(new_conn.getpeercert())
-    return new_conn
+    return conn
 
 
 def client_handler(connstream):
@@ -48,34 +47,35 @@ def client_handler(connstream):
         if not mode:
             break
 
-
-def check_arguments(port):
-    """
-  Sanity-checking server arguments.
-  """
-
-    if port < 1024 or port > 65536:
-        print('Port Number out of range. Should be in <1024,65536>')
-        return False
+def _valid_port(port):
+    try:
+        port = int(port)
+    except ValueError:
+        raise argparse.ArgumentTypeError('Port must be numeric')
     else:
-        return True
-
+        if (port < 1024 or port > 65536):
+            raise argparse.ArgumentTypeError('Port Number out of range. Should be in the range [1024,65536]')
+        return port
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='I am the server')
-    parser.add_argument('port', type=int,
+    parser.add_argument('port', type=_valid_port,
                         help='The port on which the server should run')
 
-  # Parse the commandline arguments.
-
+    # Parse the commandline arguments.
     args = parser.parse_args()
     try:
-        if check_arguments(args.port):
-                client_socket = connect(args.port)
-                while True:
-                    #print("Runnng Server")
-                    client_handler(client_socket)
-                client_socket.close()
-    except KeyboardInterrupt:
-        print('\nInterrupt received!! closing connection')
-        exit()
+        sock = listen(args.port)
+    except Exception as e:
+        print('Failed to bind to the port: ' + str(e))
+        sys.exit(1)
+
+    try:
+        (client_socket, addr) = sock.accept()
+        try:
+            while True:
+                client_handler(client_socket)
+        finally:
+            client_socket.close()
+    finally:
+        sock.close()
