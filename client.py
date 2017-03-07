@@ -86,41 +86,43 @@ class Interact(Cmd):
             #Server Error Occured.
             print(status)
             return
-        conn_handler.recv_data(self.clientsocket,'tmp_client/'+filename)
-        conn_handler.recv_data(self.clientsocket,'tmp_client/'+filename+".sha256")
-        with open('tmp_client/'+filename+".sha256",'r'):
-            fhash = hash_file.read()
+
+        hash_filename = filename + '.sha256'
+        encrypted_filename = filename + '.encrypted'
+
+        conn_handler.recv_data(self.clientsocket, filename)
+        conn_handler.recv_data(self.clientsocket, hash_filename)
+        with open(hash_filename,'r'):
+            fhash = hash_filename.read()
         if encrypt:
-            #Client assumes the file was encrypted.
-            os.rename('tmp_client/'+filename,'tmp_client/'+filename+".encrypted")
-            if not crypto_handler.decrypt_file(password, 'tmp_client/'+filename+".encrypted"):
+            # Client assumes the file was encrypted.
+            os.rename(filename, encrypted_filename)
+            if not crypto_handler.decrypt_file(
+                    password, encrypted_filename, output_filename=filename):
                 #File was not encrypted to begin with!!
-                print("Error: decryption of %s failed, was the file encrypted?"
-                        %filename)
-                os.remove('tmp_client/'+filename+".sha256") # sha of file
-                os.remove('tmp_client/'+filename+".encrypted") #enc file
-                os.remove('tmp_client/'+filename)
+                print("Error: decryption of %s failed, was the file encrypted?" % filename)
+                os.remove(filename)
             else:
-                #File decrypted check hash
-                filehash = crypto_handler.hash_('tmp_client/'+filename)
-                if fhash==filehash:
-                    print("retrieval of %s complete" %filename)
+                # Verify the decrypted file's hash
+                filehash = crypto_handler.hash_(filename)
+                if fhash == filehash:
+                    print("Retrieval of %s complete" %filename)
                 else:
                     print("Error: Computed hash of %s does not match "
-                    "retrieved hash" %filename)
-                    os.remove('tmp_client/'+filename)
-                #Irrespecive of Match or not delete the hashed file.
-                os.remove('tmp_client/'+filename+".sha256")
-                os.remove('tmp_client/'+filename+".encrypted")
+                            "retrieved hash" % filename)
+                    os.remove(filename)
+            # In all cases, delete the hash and encrypted files.
+            os.remove(hash_filename)
+            os.remove(encrypted_filename)
         else:
             #Client assumes no encryption was applied
-            filehash = crypto_handler.hash_('tmp_client/'+filename)
-            if fhash==filehash:
-                print("retrieval of %s complete "%filename)
+            filehash = crypto_handler.hash_(filename)
+            if fhash == filehash:
+                print("Retrieval of %s complete " % filename)
             else:
                 print("Error: Computed hash of %s does not match "
-                    "retrieved hash" %filename)
-            os.remove('tmp_client/'+filename+".sha256")
+                        "retrieved hash" % filename)
+            os.remove(hash_filename)
 
     def do_put(self,line):
         """Puts the file into the server
