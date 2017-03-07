@@ -30,6 +30,7 @@ class Interact(Cmd):
 
         def sigint_handler(signum, frame):
             print('\nShutting down...')
+            self.clientsocket.sendall(str.encode(""))
             sys.exit(0)
         signal.signal(signal.SIGINT, sigint_handler)  # Signal Interrupt Handler.
 
