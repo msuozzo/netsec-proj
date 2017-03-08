@@ -1,14 +1,15 @@
 "COMS 4180 Network Security Group Project"
 ==========================================
 
-* Note:
-        a) Certificate and private key paths must be provided the the client
-           and server but may be specified using either the absolute or
-           relative path.
-        b) NONE of the arguments to client commands (get, put) may contain
-           spaces. This breaks parsing. Other whitespace characters are fine.
 
-*How to set up?
+  NOTE: Certificate and private key paths must be provided the the client
+        and server but may be specified using either the absolute or
+        relative path.
+  NOTE: NONE of the arguments to client commands (get, put) may contain
+        spaces. This breaks parsing. Other whitespace characters are fine.
+
+
+=== How to set up? ===
 
 To set up the environment in a GCE Ubuntu 16.04 VM:
     1) Clone this repository (let's say REPO_PATH=~/netsec-proj)
@@ -17,53 +18,47 @@ To set up the environment in a GCE Ubuntu 16.04 VM:
     4) sudo pip3 install -r requirements.txt
 
 
-*How to Run?
-
-Note: Run the server first else you will encounter a "Connections closed"
-      error
-
-Method 1:-
-        Type make server and make client. This supplies the Server and Client
-        with default values of port number. The only caveat is that it runs
-        on localhost. If you want to test on different IPs, check Method 2
-        of this section.
-        As is common, run the server first.
-
-Method 2:-
-        server: ./server.py <port> <cert> <key> <client_cert>
-        client: ./client.py <host> <port> <cert> <key> <server_cert>
-        where:-
-        <port>          : Port Number on which server is running.
-        <host>          : IP Address/FQDN of the server on which the Server is
-                              hosted/Client will connect
-        <cert>          : The .pem file containing that entity's certificate.
-        <key>           : The .pem file containing the private key that signs
-                              that entity's certificate.
-        <*_cert>        : The .pem file containing the other entity's
-                              certificate.
-        Eg:
-        Server          : ./server.py 5000 server_cert.pem server_key.pem client_cert.pem
-        Client          : ./client.py 127.0.0.1 5000 client_cert.pem client_key.pem server_cert.pem
-
-
-*Supported Commands and Formats:
-        1) put <filename> <enc-flag> <opt-password>
-                This command encrypts the file and stores it in
-                /server_files directory of the server.
-        2) get <filename> <enc-flag> <opt-password>
-                Tries to get the file from the server and stores it in
-                /tmp_client directory of the client.
-        3) stop
-                Closes the socket and exits.
-        4) The server stores the file and its SHA256 hash in server_files folder.
-	      5) The client stores the file in tmp_client folder.
-
-
-* Generating Certificates:
-        We invoke a bash script that uses the openssl cert command to generate
-        the certificate and the private key.
+=== Generating Certificates ===
+    The client and server use PEM-formatted keys and certs. These can be
+    generated using the bash script (short wrapper around an OpenSSL command):
         a) For server:-
           ./create_cert.sh server
 
         b) For client:-
           ./create_cert.sh client
+
+
+=== How to Run? ===
+
+    server: ./server.py <port> <cert> <key> <client_cert>
+    client: ./client.py <host> <port> <cert> <key> <server_cert>
+
+    Args:
+        <port>      : Port Number on which server is running.
+        <host>      : IP Address/FQDN of the server on which the Server is
+                          hosted/Client will connect
+        <cert>      : The .pem file containing that entity's certificate.
+        <key>       : The .pem file containing the private key that signs
+                          that entity's certificate.
+        <*_cert>    : The .pem file containing the other entity's
+                              certificate.
+    Example usage:
+        Server      : ./server.py 8000 server_cert.pem server_key.pem client_cert.pem
+        Client      : ./client.py 127.0.0.1 8000 client_cert.pem client_key.pem server_cert.pem
+
+
+=== Supported Commands and Formats ===
+    1) put <filename> <enc-flag> <opt-password>
+            This command encrypts the file and stores it on the server.
+    2) get <filename> <enc-flag> <opt-password>
+            Tries to get the file from the server and stores it locally.
+    3) stop
+            Closes the socket and exits.
+    4) help OR help <cmd>
+            Displays a brief explanation of the command(s).
+
+    NOTE: The server stores the file and its SHA256 hash in the folder from
+          which it was run or at the relative/absolute path provided by the
+          client.
+	NOTE: The client stores the file in folder from which it was run with the
+          same caveat as the server.
