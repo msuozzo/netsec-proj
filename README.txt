@@ -14,7 +14,7 @@ To set up the environment in a GCE Ubuntu 16.04 VM:
     1) Clone this repository (let's say REPO_PATH=~/netsec-proj)
     2) sudo apt-get install -y python3-pip
     3) cd ${REPO_PATH}
-    4) pip3 install -r requirements.txt
+    4) sudo pip3 install -r requirements.txt
 
 
 *How to Run?
