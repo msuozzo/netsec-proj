@@ -12,6 +12,7 @@
 === How to set up? ===
 
 To set up the environment in a GCE Ubuntu 16.04 VM:
+    0) sudo apt-get install git 
     1) Clone this repository (let's say REPO_PATH=~/netsec-proj)
     2) sudo apt-get install -y python3-pip
     3) cd ${REPO_PATH}
