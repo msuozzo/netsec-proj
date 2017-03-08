@@ -1,10 +1,10 @@
+"""Crypto operations used by the client and server."""
+
 import os
 import random
 
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
-
-import crypto
 
 
 _DEFAULT_CHUNK_SIZE = 64 * 1024
@@ -16,6 +16,12 @@ def _chunk_file(fd, chunksize):
             yield data
         else:
             raise StopIteration
+
+
+def _pkcs7_pad(plaintext):
+  length = 16 - (len(plaintext) % 16)
+  plaintext += bytes([length]) * length
+  return plaintext
 
 
 def _key_from_password(password):
@@ -54,7 +60,7 @@ def encrypt_file(
             outfile.write(iv)
             for chunk in _chunk_file(infile, chunksize):
                 if len(chunk) % 16 != 0:
-                    chunk = crypto.pkcs7_pad(chunk)
+                    chunk = _pkcs7_pad(chunk)
                 outfile.write(cipher.encrypt(chunk))
 
 
