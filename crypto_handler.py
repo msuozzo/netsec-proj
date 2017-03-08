@@ -10,6 +10,7 @@ from Crypto.Hash import SHA256
 _DEFAULT_CHUNK_SIZE = 64 * 1024
 
 def _chunk_file(fd, chunksize):
+    """Generator over a file's contents in chunks of a given size."""
     while True:
         data = fd.read(chunksize)
         if data:
@@ -25,6 +26,7 @@ def _pkcs7_pad(plaintext):
 
 
 def _key_from_password(password):
+    """Generates a 128-bit key by seeding an RNG with the provided password."""
     random.seed(password)
     key_bits = random.getrandbits(128)
     return key_bits.to_bytes(16, byteorder='big')
@@ -33,18 +35,16 @@ def _key_from_password(password):
 def encrypt_file(
         key, input_filename, output_filename=None,
         chunksize=_DEFAULT_CHUNK_SIZE):
-    """
-    Encrypts a file using AES with CBC mode.
+    """Encrypts a file using AES with CBC mode.
+
     Args:
-          key: The encryption key - a string that must be
-               either 16, 24 or 32 bytes long. Longer keys
-               are more secure.
-          input_filename: Name of the input file
-          output_filename: If None, '<input_filename>.encrypted' will be used.
-          chunksize: Sets the size of the chunk which the function
-              uses to read and encrypt the file. Larger chunk
-                     sizes can be faster for some files and machines.
-                     chunksize must be divisible by 16.
+        key: The encryption key - a string that must be
+            either 16, 24 or 32 bytes long. Longer keys are more secure.
+        input_filename: Name of the input file
+        output_filename: If None, '<input_filename>.encrypted' will be used.
+        chunksize: Sets the size of the chunk which the function uses to read
+            and encrypt the file. Larger chunk sizes can be faster for some files
+            and machines. chunksize must be divisible by 16.
     """
     key = _key_from_password(key)
     if not output_filename:
@@ -67,18 +67,16 @@ def encrypt_file(
 def decrypt_file(
         key, input_filename, output_filename=None,
         chunksize=_DEFAULT_CHUNK_SIZE):
-    """ Decrypts a file using AES with CBC mode.
-        Args:
-          key: The encryption key - a string that must be
-               either 16, 24 or 32 bytes long. Longer keys
-               are more secure.
-          input_filename: Name of the (encrypted) input file
-                          output_filename:
-                          If None, the file is named is "decrypted".
-          chunksize: Sets the size of the chunk which the function
-                     uses to read and encrypt the file. Larger chunk
-                     sizes can be faster for some files and machines.
-                     chunksize must be divisible by 16.
+    """Decrypts a file using AES with CBC mode.
+
+    Args:
+        key: The encryption key - a string that must be
+            either 16, 24 or 32 bytes long. Longer keys are more secure.
+        input_filename: Name of the (encrypted) input file
+        output_filename: If None, the file is named is "decrypted".
+        chunksize: Sets the size of the chunk which the function uses to read
+            and encrypt the file. Larger chunk sizes can be faster for some
+            files and machines. chunksize must be divisible by 16.
     """
     key = _key_from_password(key)
     if not output_filename:
@@ -98,6 +96,7 @@ def decrypt_file(
 
 
 def hash_(filename):
+    """Returns a hash of the contents of the file."""
     with open(filename,'rb') as f:
         message = f.read()
         h = SHA256.new()
