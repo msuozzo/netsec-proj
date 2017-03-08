@@ -19,8 +19,9 @@ To set up the environment in a GCE Ubuntu 16.04 VM:
 
 
 === Generating Certificates ===
-    The client and server use PEM-formatted keys and certs. These can be
-    generated using the bash script (short wrapper around an OpenSSL command):
+    The client and server use PEM-formatted keys and certs. The keys and certs
+    we used for development are included in the repository but they can also be
+    generated using the included bash script (a short wrapper around OpenSSL):
         a) For server:-
           ./create_cert.sh server
 
