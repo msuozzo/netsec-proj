@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 import argparse
-import pprint
-import socket
-import ssl
 import cmd
 import os
 import readline
 import signal
+import socket
+import ssl
 import sys
-from cmd import Cmd
 
 import crypto_handler
 import conn_handler
 
+# Temporary names to use when downloading and verifying files. This avoids
+# overwriting and deleting actual files on the client when verification fails.
 _TMP_FNAME = '.~~tmp_file'
 _TMP_ENC_FNAME = _TMP_FNAME + '.encrypted'
 
@@ -21,12 +21,12 @@ class Error(Exception):
     """Base error for the class."""
 
 
-class Interact(Cmd):
+class ClientCli(cmd.Cmd):
     """CLI for interacting with the user!!
     """
 
     def __init__(self, clientsocket):
-        super(Interact, self).__init__()
+        super(ClientCli, self).__init__()
         self.prompt = "> "
         self.doc_header = "Secure TLS Shell"
         self.ruler = "-"
@@ -41,7 +41,7 @@ class Interact(Cmd):
 
     def cmdloop(self):
         try:
-            super(Interact, self).cmdloop()
+            super(ClientCli, self).cmdloop()
         except Exception as e:
             print('Error encountered: ' + str(e))
             self.intro = ''  # Suppress intro message for re-launch.
@@ -247,8 +247,9 @@ if __name__ == '__main__':
         print(e)
         sys.exit(1)
 
+    # Instantiates and starts the CLI.
     try:
-        console = Interact(sock)
+        console = ClientCli(sock)
         console.cmdloop()
     finally:
         sock.close()

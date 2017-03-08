@@ -1,3 +1,4 @@
+"""Utils for sending and receiving data over a connection."""
 
 
 def send_data(sock, filename):
