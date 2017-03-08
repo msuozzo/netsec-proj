@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 import argparse
-import pprint
+import os
 import socket
 import ssl
+import sys
+
 import crypto_handler
 import conn_handler
-import os
-import signal
-import sys
+
+
+_TMP_FNAME = '.~~tmp_serv_file'
 
 
 class Error(Exception):
@@ -21,17 +23,31 @@ def client_handler(connstream):
             fhash = connstream.recv(1024)
             filename = str(connstream.recv(1024),'utf-8')
             hash_filename = filename + '.sha256'
-            with open(hash_filename, 'wb') as f:
-                f.write(fhash)
-            conn_handler.recv_data(connstream, filename)
-            msg = "Transfer of %s complete" % filename
-            connstream.sendall(str.encode(msg))
+            try:
+                with open(hash_filename, 'wb') as f:
+                    f.write(fhash)
+            except:
+                try: conn_handler.recv_data(connstream, _TMP_FNAME)
+                except: pass
+                connstream.sendall(str.encode("Error: %s was not put" % filename))
+            else:
+                try:
+                    conn_handler.recv_data(connstream, _TMP_FNAME)
+                    os.rename(_TMP_FNAME, filename)
+                except:
+                    connstream.sendall(str.encode("Error: %s was not put" % filename))
+                else:
+                    connstream.sendall(str.encode("Transfer of %s complete" % filename))
+            finally:
+                try: os.remove(_TMP_FNAME)
+                except: pass
         elif mode == 'get':
             filename = str(connstream.recv(1024), 'utf-8')
             hash_filename = filename + '.sha256'
+
+            # Check that both the requested file and its hash file exist
+            # and are readable by the client.
             try:
-                # Check that both the requested file and its hash file exist
-                # and are readable by the client.
                 open(filename, 'rb').close()
                 open(hash_filename, 'rb').close()
             except:
