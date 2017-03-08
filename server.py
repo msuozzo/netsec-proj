@@ -9,17 +9,9 @@ import os
 import signal
 import sys
 
-def listen(port, server_cert, server_key, client_cert):
-    ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-    ctx.verify_mode = ssl.CERT_REQUIRED
-    ctx.load_cert_chain(server_cert, keyfile=server_key)
-    ctx.load_verify_locations(client_cert)
-    conn = ctx.wrap_socket(socket.socket(socket.AF_INET),
-                           server_side=True)
 
-    conn.bind(('', port))
-    conn.listen()
-    return conn
+class Error(Exception):
+    """Base error for the server."""
 
 
 def client_handler(connstream):
@@ -51,6 +43,29 @@ def client_handler(connstream):
         if not mode:
             break
 
+
+def listen(port, server_cert, server_key, client_cert):
+    """Listens on a port for clients connecting with a given cert.
+
+    Returns an SSLSocket bound to the local port on success.
+    Raises Error if listening fails.
+    """
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    ctx.verify_mode = ssl.CERT_REQUIRED
+    try:
+        ctx.load_cert_chain(server_cert, keyfile=server_key)
+        ctx.load_verify_locations(client_cert)
+        conn = ctx.wrap_socket(socket.socket(socket.AF_INET),
+                               server_side=True)
+
+        conn.bind(('', port))
+        conn.listen()
+    except Exception as e:
+        raise Error('Failed to listen: %s' % str(e))
+    else:
+        return conn
+
+
 def _valid_port(port):
     try:
         port = int(port)
@@ -72,8 +87,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     try:
         sock = listen(args.port, args.cert, args.key, args.clnt_cert)
-    except Exception as e:
-        print('Failed to bind to the port: ' + str(e))
+    except Error as e:
+        print(str(e))
         sys.exit(1)
 
     try:
@@ -81,7 +96,11 @@ if __name__ == '__main__':
             (client_socket, addr) = sock.accept()
             try:
                 client_handler(client_socket)
+            except Exception as e:
+                print('Client connection failed: %s' % str(e))
             finally:
                 client_socket.close()
+    except Exception as e:
+        print('Failed to accept a connection: %s' % str(e))
     finally:
         sock.close()

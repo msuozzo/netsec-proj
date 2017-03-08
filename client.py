@@ -184,6 +184,11 @@ class Interact(Cmd):
 
 
 def connect(hostname, port, client_cert, client_key, server_cert):
+    """Attempt to connect to a server at the given address.
+
+    Returns an SSLSocket connected to the server on success.
+    Raises Error if connection failed.
+    """
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     ctx.verify_mode = ssl.CERT_REQUIRED
     ctx.check_hostname = False
