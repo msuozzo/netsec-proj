@@ -75,7 +75,7 @@ def listen(port, server_cert, server_key, client_cert):
                                server_side=True)
 
         conn.bind(('', port))
-        conn.listen()
+        conn.listen(0)
     except Exception as e:
         raise Error('Failed to listen: %s' % str(e))
     else:
