@@ -3,6 +3,7 @@ import argparse
 import cmd
 import os
 import readline
+import shutil
 import signal
 import socket
 import ssl
@@ -98,14 +99,14 @@ class ClientCli(cmd.Cmd):
         server_hash = str(self.clientsocket.recv(1024), 'utf-8')
         if encrypt:
             # Client assumes the file was encrypted.
-            os.rename(_TMP_FNAME, _TMP_ENC_FNAME)
+            shutil.move(_TMP_FNAME, _TMP_ENC_FNAME)
             if not crypto_handler.decrypt_file(password, _TMP_ENC_FNAME, output_filename=_TMP_FNAME):
                 print("Error: decryption of %s failed. (Was the file encrypted?)" % filename)
             else:
                 # Verify the decrypted file's hash
                 calculated_hash = crypto_handler.hash_(_TMP_FNAME)
                 if server_hash == calculated_hash:
-                    os.rename(_TMP_FNAME, filename)
+                    shutil.move(_TMP_FNAME, filename)
                     print("Retrieval of %s complete" % filename)
                 else:
                     print("Error: Computed hash of %s does not match "
@@ -114,7 +115,7 @@ class ClientCli(cmd.Cmd):
             # Client assumes no encryption was applied.
             calculated_hash = crypto_handler.hash_(_TMP_FNAME)
             if server_hash == calculated_hash:
-                os.rename(_TMP_FNAME, filename)
+                shutil.move(_TMP_FNAME, filename)
                 print("Retrieval of %s complete " % filename)
             else:
                 print("Error: Computed hash of %s does not match "

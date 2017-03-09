@@ -33,7 +33,7 @@ def client_handler(connstream):
             else:
                 try:
                     conn_handler.recv_data(connstream, _TMP_FNAME)
-                    os.rename(_TMP_FNAME, filename)
+                    shutil.move(_TMP_FNAME, filename)
                 except:
                     connstream.sendall(str.encode("Error: %s was not put" % filename))
                 else:
