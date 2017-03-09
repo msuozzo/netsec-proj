@@ -46,6 +46,7 @@ def client_handler(connstream):
                 except: pass
         elif mode == 'get':
             filename = str(connstream.recv(1024), 'utf-8')
+            filename = os.path.basename(filename)
             hash_filename = filename + '.sha256'
 
             # Check that both the requested file and its hash file exist
