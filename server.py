@@ -3,6 +3,7 @@ import argparse
 import errno
 import os
 import shutil
+import signal
 import socket
 import ssl
 import sys
@@ -110,6 +111,12 @@ if __name__ == '__main__':
     except Error as e:
         print(str(e))
         sys.exit(1)
+    else:
+        def sigint_handler(signum, frame):
+            print('\nShutting down...')
+            sock.close()
+            sys.exit(0)
+        signal.signal(signal.SIGINT, sigint_handler)  # Signal Interrupt Handler.
 
     try:
         while True:
