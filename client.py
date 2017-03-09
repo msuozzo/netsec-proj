@@ -68,7 +68,7 @@ class ClientCli(cmd.Cmd):
         if len(args) == 2:
             #case get <filename> <encflag = N>
             filename, encflag = line.split(" ")
-            if encflag!='N':
+            if encflag != 'N':
                 print('Error: For 2-argument get, flag must be "N"\nUsage: "get <fname> N"')
                 return
             self._get(filename)
