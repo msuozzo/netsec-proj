@@ -68,10 +68,10 @@ class ClientCli(cmd.Cmd):
         if len(args) == 2:
             #case get <filename> <encflag = N>
             filename, encflag = line.split(" ")
+            password = None
             if encflag != 'N':
                 print('Error: For 2-argument get, flag must be "N"\nUsage: "get <fname> N"')
                 return
-            self._get(filename)
         elif len(args) == 3:
             #case get <filename> <encflag = E> <password>
             filename, encflag, password = line.split(" ")
@@ -81,10 +81,22 @@ class ClientCli(cmd.Cmd):
             elif encflag != 'E':
                 print('Error: For 3-argument get, flag must be "E"\nUsage: "get <fname> E <pword>"')
                 return
-            self._get(filename, encrypt=True, password=password)
         else:
             print('Usage: "get <fname> <flag> {opt_pword}"')
             return
+
+        basename = os.path.basename(filename)
+        if basename != filename:
+            print('Warning: get command issued with path arguments')
+            print('         Stripped "%s" --> "%s"' % (filename, basename))
+        if not basename:
+            print('Error: Empty get argument')
+            return
+
+        if password is None:
+            self._get(basename)
+        else:
+            self._get(basename, encrypt=True, password=password)
 
     def _get(self, filename, encrypt=False, password=None):
         self.clientsocket.sendall(str.encode("get"))
