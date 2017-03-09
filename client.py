@@ -103,11 +103,18 @@ class ClientCli(cmd.Cmd):
         self.clientsocket.sendall(str.encode(filename))
         status = str(self.clientsocket.recv(1024),'utf-8')
         if status != 'OK':
-            #Server Error Occured.
+            # Server Error Occured.
             print(status)
             return
 
-        conn_handler.recv_data(self.clientsocket, _TMP_FNAME)
+        try:
+            # Get the contents of the file.
+            conn_handler.recv_data(self.clientsocket, _TMP_FNAME)
+        except OSError as e:
+            print('Error: writing %s to disk failed' % (filename))
+            self.clientsocket.recv(1024)  # Exhaust hash response from server
+            return
+
         server_hash = str(self.clientsocket.recv(1024), 'utf-8')
         if encrypt:
             # Client assumes the file was encrypted.

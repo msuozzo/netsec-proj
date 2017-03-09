@@ -14,11 +14,14 @@ def send_data(sock, filename):
 def recv_data(sock, filename):
     """Receive data from the socket into a file."""
     # Get the size of the expected data.
+    pieces = []
     remaining = int.from_bytes(sock.recv(4), 'big')
+    while remaining:
+        # While we expect to receive more data, gather that much data (or
+        # a full chunk, whichever is smaller).
+        buf = sock.recv(min(remaining, 1024))
+        pieces.append(buf)
+        remaining -= len(buf)
+    data = b''.join(pieces)
     with open(filename, 'wb') as f:
-        while remaining:
-            # While we expect to receive more data, gather that much data (or
-            # a full chunk, whichever is smaller).
-            rbuf = sock.recv(min(remaining, 1024))
-            remaining -= len(rbuf)
-            f.write(rbuf)
+        f.write(data)
