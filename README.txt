@@ -61,7 +61,5 @@ To set up the environment in a GCE Ubuntu 16.04 VM:
             Displays a brief explanation of the command(s).
 
     NOTE: The server stores the file and its SHA256 hash in the folder from
-          which it was run or at the relative/absolute path provided by the
-          client.
-	NOTE: The client stores the file in folder from which it was run with the
-          same caveat as the server.
+          which it was run.
+	NOTE: The client stores the file in folder from which it was run.
