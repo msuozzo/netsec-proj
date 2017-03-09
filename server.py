@@ -24,6 +24,7 @@ def client_handler(connstream):
             filename = str(connstream.recv(1024),'utf-8')
             hash_filename = filename + '.sha256'
             try:
+                os.makedirs(os.path.dirname(filename))
                 with open(hash_filename, 'wb') as f:
                     f.write(fhash)
             except:
