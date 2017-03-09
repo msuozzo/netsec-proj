@@ -26,12 +26,12 @@ class ClientCli(cmd.Cmd):
     """CLI for interacting with the user!!
     """
 
-    def __init__(self, clientsocket):
+    def __init__(self, clientsocket, restart=False):
         super(ClientCli, self).__init__()
         self.prompt = "> "
         self.doc_header = "Secure TLS Shell"
         self.ruler = "-"
-        self.intro = 'Welcome to our 2-Way secure TLS shell!!'
+        self.intro = 'Welcome to our 2-Way secure TLS shell!!' if not restart else ''
         self.clientsocket = clientsocket
 
         def sigint_handler(signum, frame):
@@ -39,14 +39,6 @@ class ClientCli(cmd.Cmd):
             self.clientsocket.sendall(str.encode(""))
             sys.exit(0)
         signal.signal(signal.SIGINT, sigint_handler)  # Signal Interrupt Handler.
-
-    def cmdloop(self):
-        try:
-            super(ClientCli, self).cmdloop()
-        except Exception as e:
-            print('Error encountered: ' + str(e))
-            self.intro = ''  # Suppress intro message for re-launch.
-            self.cmdloop()
 
     def default(self, line):
         print("Invalid command. Valid commands: ('get' 'put' 'stop'). Type 'help <cmd>' for command-specific help")
@@ -107,13 +99,8 @@ class ClientCli(cmd.Cmd):
             print(status)
             return
 
-        try:
-            # Get the contents of the file.
-            conn_handler.recv_data(self.clientsocket, _TMP_FNAME)
-        except OSError as e:
-            print('Error: writing %s to disk failed' % (filename))
-            self.clientsocket.recv(1024)  # Exhaust hash response from server
-            return
+        # Get the contents of the file.
+        conn_handler.recv_data(self.clientsocket, _TMP_FNAME)
 
         server_hash = str(self.clientsocket.recv(1024), 'utf-8')
         if encrypt:
@@ -261,16 +248,23 @@ if __name__ == '__main__':
 
     # Parse the commandline arguments.
     args = parser.parse_args()
-    try:
-        sock = connect(args.serv_addr, args.serv_port, args.cert, args.key, args.serv_cert)
-    except Error as e:
-        print(e)
-        sys.exit(1)
 
-    # Instantiates and starts the CLI.
-    try:
-        console = ClientCli(sock)
-        console.cmdloop()
-    finally:
-        sock.close()
-        sys.exit(0)
+    # Instantiates and starts the CLI loop.
+    restart = False
+    while True:
+        try:
+            sock = connect(args.serv_addr, args.serv_port, args.cert, args.key, args.serv_cert)
+        except Error as e:
+            print(e)
+            sys.exit(1)
+        try:
+            ClientCli(sock, restart=restart).cmdloop()
+        except Exception as e:
+            # If the CLI encounters an error, display the error, tear down the
+            # connection, and attempt to reconnect to the server.
+            print('Error encountered: ' + str(e))
+            restart = True
+            sock.close()
+        else:
+            sock.close()
+            break
