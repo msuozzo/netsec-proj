@@ -1,5 +1,6 @@
 "COMS 4180 Network Security Group Project"
 ==========================================
+Sean Inouye (si2281) || Michael Pinkham (mlp2185) || Akhilesh Srivastava (as5215) || Matthew Suozzo (ms4249)
 
 
   NOTE: Certificate and private key paths must be provided the the client
