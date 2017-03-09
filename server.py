@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import argparse
+import errno
 import os
+import shutil
 import socket
 import ssl
 import sys
@@ -16,6 +18,17 @@ class Error(Exception):
     """Base error for the server."""
 
 
+def _create_directories(file_path):
+    """Creates all directories along the file path."""
+    try:
+        dirpath = os.path.dirname(file_path)
+        if not dirpath: return
+        os.makedirs(dirpath)
+    except OSError as e:
+        if not (e.errno == errno.EEXIST and os.path.isdir(dirpath)):
+            raise
+
+
 def client_handler(connstream):
     while True:
         mode = str(connstream.recv(1024),'utf-8')
@@ -24,7 +37,7 @@ def client_handler(connstream):
             filename = str(connstream.recv(1024),'utf-8')
             hash_filename = filename + '.sha256'
             try:
-                os.makedirs(os.path.dirname(filename))
+                _create_directories(filename)
                 with open(hash_filename, 'wb') as f:
                     f.write(fhash)
             except:
