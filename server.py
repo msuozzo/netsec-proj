@@ -111,23 +111,26 @@ if __name__ == '__main__':
     except Error as e:
         print(str(e))
         sys.exit(1)
-    else:
-        def sigint_handler(signum, frame):
-            print('\nShutting down...')
-            sock.close()
-            sys.exit(0)
-        signal.signal(signal.SIGINT, sigint_handler)  # Signal Interrupt Handler.
+
+    # Register the signal interrupt handler.
+    def sigint_handler(signum, frame):
+        print('\nShutting down...')
+        sock.close()
+        sys.exit(0)
+    signal.signal(signal.SIGINT, sigint_handler)
 
     try:
         while True:
-            (client_socket, addr) = sock.accept()
             try:
-                client_handler(client_socket)
+                (client_socket, addr) = sock.accept()
             except Exception as e:
-                print('Client connection failed: %s' % str(e))
-            finally:
-                client_socket.close()
-    except Exception as e:
-        print('Failed to accept a connection: %s' % str(e))
+                print('Failed to accept a connection: %s' % str(e))
+            else:
+                try:
+                    client_handler(client_socket)
+                except Exception as e:
+                    print('Client connection failed: %s' % str(e))
+                finally:
+                    client_socket.close()
     finally:
         sock.close()
