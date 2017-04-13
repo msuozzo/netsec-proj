@@ -201,6 +201,12 @@ def connect(hostname, port, client_cert, client_key, server_cert):
     ctx.check_hostname = False
     try:
         ctx.load_cert_chain(client_cert, keyfile=client_key)
+    except ssl.SSLError as e:
+        if 'PEM lib' in str(e):
+            raise Error('Failed to load client key or client certification: Unexpected key or cert format')
+        else:
+            raise Error('Failed to load client key or client certification: ' +
+                    str(e))
     except Exception as e:
         raise Error('Failed to load client key or client certification: ' +
                 str(e))
@@ -212,6 +218,13 @@ def connect(hostname, port, client_cert, client_key, server_cert):
     conn = ctx.wrap_socket(socket.socket(socket.AF_INET))
     try:
         conn.connect((hostname, port))
+    except ssl.SSLError as e:
+        if 'unknown ca' in str(e):
+            raise Error('Failed to connect: Server does not recognize client certificate CA')
+        elif 'certificate verify failed' in str(e):
+            raise Error('Failed to connect: Client does not recognize server certificate CA')
+        else:
+            raise Error('Failed to connect: ' + str(e))
     except Exception as e:
         raise Error('Failed to connect: ' + str(e))
     else:

@@ -27,7 +27,11 @@ running the cert creation script.
 
 ## -3: Invalid cert/key messages are not descriptive and do not catch exceptions.
 
-
+We did update some of the most common error cases to provide more specific
+error messages but we feel that the overall complexity of TLS makes the task of
+accurate error handling to be necessarily error-prone. The risks of providing
+an inaccurate message, in many cases, outweigh the benefits of attempting to
+enumerate and handle the error conditions.
 
 ## -2: Passing incorrect server/key in client can get server to exit, this should not be the case
 
