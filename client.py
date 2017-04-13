@@ -203,12 +203,12 @@ def connect(hostname, port, client_cert, client_key, server_cert):
         ctx.load_cert_chain(client_cert, keyfile=client_key)
     except ssl.SSLError as e:
         if 'PEM lib' in str(e):
-            raise Error('Failed to load client key or client certification: Unexpected key or cert format')
+            raise Error('Failed to load client key or certificate: Unexpected key or cert format')
         else:
-            raise Error('Failed to load client key or client certification: ' +
+            raise Error('Failed to load client key or certificate: ' +
                     str(e))
     except Exception as e:
-        raise Error('Failed to load client key or client certification: ' +
+        raise Error('Failed to load client key or certificate: ' +
                 str(e))
     try:
         ctx.load_verify_locations(server_cert)
