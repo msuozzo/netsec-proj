@@ -1,0 +1,34 @@
+======Comments for Part 1========
+
+# Installation
+Works correctly.
+
+# Documentation
+Good documentation.
+
+# Certificate creation:
+-1: Missing instructions on responding to openssl prompts.  
+
+# Program functionality
+Works correctly.
+
+# Error handling
+-3: Invalid cert/key messages are not descriptive and do not catch exceptions.
+-2: Passing incorrect server/key in client can get server to exit, this should not be the case
+
+
+======Revisions========
+
+## -1: Missing instructions on responding to openssl prompts.  
+
+While we did update README.txt to mention the prompts, we believe that the
+average user would instinctually know to follow the OpenSSL prompts when
+running the cert creation script.
+
+## -3: Invalid cert/key messages are not descriptive and do not catch exceptions.
+
+
+
+## -2: Passing incorrect server/key in client can get server to exit, this should not be the case
+
+This has been fixed.
