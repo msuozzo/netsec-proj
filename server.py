@@ -75,7 +75,17 @@ def listen(port, server_cert, server_key, client_cert):
     ctx.verify_mode = ssl.CERT_REQUIRED
     try:
         ctx.load_cert_chain(server_cert, keyfile=server_key)
+    except ssl.SSLError as e:
+        if 'PEM lib' in str(e):
+            raise Error('Failed to load server key or certificate: Unexpected key or cert format')
+        else:
+            raise Error('Failed to load server key or certificate: ' +
+                    str(e))
+    try:
         ctx.load_verify_locations(client_cert)
+    except Exception as e:
+        raise Error('Failed to load client cert: ' + str(e))
+    try:
         conn = ctx.wrap_socket(socket.socket(socket.AF_INET),
                                server_side=True)
 
