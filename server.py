@@ -78,6 +78,8 @@ def listen(port, server_cert, server_key, client_cert):
     except ssl.SSLError as e:
         if 'PEM lib' in str(e):
             raise Error('Failed to load server key or certificate: Unexpected key or cert format')
+        elif 'key values mismatch' in str(e):
+            raise Error('Failed to load server key or certificate: Key incompatible with cert')
         else:
             raise Error('Failed to load server key or certificate: ' +
                     str(e))
